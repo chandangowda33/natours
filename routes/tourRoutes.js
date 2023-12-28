@@ -8,6 +8,15 @@ const router = express.Router();
 //val is the value fourth parameter
 // router.param('id', tourController.checkID);
 
+//route aliasing to get top 5 cheap and top rated tours
+router
+  .route('/top-5-cheap')
+  .get(tourController.aliasTopTours, tourController.getAllTours);
+
+router.route('/tour-stats').get(tourController.getTourStats);
+
+router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
+
 router
   .route('/')
   .get(tourController.getAllTours)

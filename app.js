@@ -1,9 +1,13 @@
+/* eslint-disable prettier/prettier */
 // its conventional to have all the express config in app.js
 const express = require('express');
 
 //third party middleware from npm need to instal before using
 const morgan = require('morgan');
 
+// eslint-disable-next-line node/no-missing-require
+const AppError = require('./utilities/appError');
+const globalErrorHandler = require('./controllers/errorControllers');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
@@ -94,5 +98,25 @@ app.use(express.static(`${__dirname}/public`));
 //we assigned root route to variable
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+
+//if we get url other then our routes
+//this has to be at the last
+
+app.all('*', (req, res, next) => {
+  // res.status(404).json({
+  //   status: 'fail',
+  //   message: `Can't find ${req.originalUrl} on this server!`,
+  // });
+  // const err = new Error(`Can't find ${req.originalUrl} on this server!`);
+  // err.status = 'fail';
+  // err.statusCode = 404;
+  // next(err);
+  //created seperate class
+  // //if we pass anything to next it will think as error and directly jump to error handling middleware
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+//error handling middleware
+app.use(globalErrorHandler);
 
 module.exports = app;
