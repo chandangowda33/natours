@@ -1,3 +1,4 @@
+/* eslint-disable import/no-useless-path-segments */
 /* eslint-disable prettier/prettier */
 // const fs = require('fs');
 const { MongoNetworkError } = require('mongodb');
@@ -5,8 +6,10 @@ const Tour = require('../models/tourModel');
 
 // eslint-disable-next-line import/extensions
 const APIFeatures = require('../utilities/APIFeatures.js');
-const AppError = require('./../utilities/appError.js');
+// eslint-disable-next-line import/no-useless-path-segments, import/extensions
+const AppError = require('../utilities/appError.js');
 
+// eslint-disable-next-line import/extensions
 const catchAsync = require('./../utilities/catchAsync.js');
 
 // // const tours = JSON.parse(

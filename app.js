@@ -1,6 +1,17 @@
 /* eslint-disable prettier/prettier */
 // its conventional to have all the express config in app.js
 const express = require('express');
+// eslint-disable-next-line import/no-extraneous-dependencies
+//this is to limit number of request from one ip
+const rateLimit = require('express-rate-limit');
+
+const helmet = require('helmet');
+
+const mongoSanitize = require('express-mongo-sanitize');
+
+const xss = require('xss-clean');
+
+const hpp = require('hpp');
 
 //third party middleware from npm need to instal before using
 const morgan = require('morgan');
@@ -14,6 +25,19 @@ const userRouter = require('./routes/userRoutes');
 //it will add bunch of methods to app
 const app = express();
 
+//put it first
+//Set security HTTP headers
+app.use(helmet());
+
+//limit 100 request in one hour from one
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in an hour',
+});
+
+//only use it for routes starts in /api
+app.use('/api', limiter);
 //only when program running in development environment run this
 //we have access to NODE_ENV coz its process variable depends on environment so we have
 if (process.env.NODE_ENV === 'development') {
@@ -25,7 +49,30 @@ if (process.env.NODE_ENV === 'development') {
 //This is middleware
 //middleware is function can manipulate incoming data
 //in post request we add data to body to add that into request this middleware is used
-app.use(express.json());
+//limiting body less than 10kb
+app.use(express.json({ limit: '10kb' }));
+
+//Data Santization against NoSQL query injection
+app.use(mongoSanitize());
+
+//Data sanitization against XSS
+app.use(xss());
+
+//prevent parameter pollution
+app.use(
+  hpp({
+    //manually we have to add the fields which we use to sort and file
+    whitelist: [
+      'ratingsQuality',
+      'duration',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
+//above 4 should be in same order
 
 //.use gives access to middleware
 //middleware access to req, res and next function which passes the data to next fn in middleware stack
