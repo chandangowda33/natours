@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     //you cant set it to admin you have to manually do in the compass
-    enum: ['user', 'admin', 'lead-guide', 'guide'],
+    enum: ['user', 'lead-guide', 'guide'],
     default: 'user',
   },
   password: {

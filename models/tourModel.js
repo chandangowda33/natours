@@ -6,6 +6,7 @@ const slugify = require('slugify');
 
 // eslint-disable-next-line import/no-extraneous-dependencies, no-unused-vars
 const validator = require('validator'); //npm i validator
+// const User = require('./userModel');
 //below is the basic schema just data type defination with no validation
 // const tourSchema=new.mongoose.Schema({
 //   name:String,
@@ -93,6 +94,43 @@ const tourSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    //GeoJSON
+    //to have Geospatial data in MongoDB we should create object of 2 fields one with string and another with coordinates
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      //this will be of array with longitude and latitude
+      coordibates: [Number],
+      address: String,
+      description: String,
+    },
+    //below is embedded document it should be of array so wrapped in[]
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        //this will be of array with longitude and latitude
+        coordibates: [Number],
+        address: String,
+        description: String,
+      },
+    ],
+    //if you want embedded
+    // guides: Array,
+    //if you want to reference
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        //here we dont need to import Uder model also for this
+        reference: 'User',
+      },
+    ],
     startDates: [Date],
     secretTour: {
       type: Boolean,
@@ -129,6 +167,16 @@ tourSchema.pre('save', function (next) {
 // tourSchema.post('save', (doc, next) => {
 //   // console.log(doc);
 //   next();
+// });
+
+//If you want to embed the guide details in tour model use below code
+//but tit has drawback think if guide wants to updae his data then again we have to update here too
+//so we use referencing here
+// tourSchema.pre('save', async function (next) {
+//   //inside map there is async so it return promises and it will be ful of promises
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   //so here we run promise.all to execute everything at once
+//   this.guides = await Promise.all(guidesPromises);
 // });
 
 //Query middleware
