@@ -65,6 +65,19 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
 });
 
+//comment below stuffs when you save the data from dev data
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
+
 //this is instance method which is avaialble to every document of the model
 //this comparission we could have done in controller only but here we have data so we do here
 userSchema.methods.correctPassword = async function (
@@ -105,17 +118,6 @@ userSchema.methods.correctPasswordResetToken = function () {
   return resetToken;
 };
 
-userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) return next();
-
-  this.passwordChangedAt = Date.now() - 1000;
-  next();
-});
-
-userSchema.pre(/^find/, function (next) {
-  this.find({ active: { $ne: false } });
-  next();
-});
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

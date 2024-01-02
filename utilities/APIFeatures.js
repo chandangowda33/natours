@@ -4,7 +4,6 @@ class APIFeatures {
     this.query = query;
     this.queryString = queryString;
   }
-
   //check tourcontroler for more details on code
 
   filter() {
@@ -53,5 +52,4 @@ class APIFeatures {
     return this;
   }
 }
-
 module.exports = APIFeatures;

@@ -6,7 +6,8 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 
 const helmet = require('helmet');
-
+//path helps in changing the path names
+const path = require('path');
 const mongoSanitize = require('express-mongo-sanitize');
 
 const xss = require('xss-clean');
@@ -21,9 +22,15 @@ const AppError = require('./utilities/appError');
 const globalErrorHandler = require('./controllers/errorControllers');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
-
+const reviewRouter = require('./routes/reviewRoute');
+const viewRouter = require('./routes/reviewRoute');
 //it will add bunch of methods to app
 const app = express();
+
+//pug is a view engine
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 //put it first
 //Set security HTTP headers
@@ -92,7 +99,6 @@ app.use((req, res, next) => {
 //now if routes dont match it will search in public foldera dn from that we can see files in browser
 //https://127.0.0.1:3000/overview.html
 //we can get
-app.use(express.static(`${__dirname}/public`));
 
 // app.get('/', (req, res) => {
 //   //.send to send string
@@ -143,8 +149,11 @@ app.use(express.static(`${__dirname}/public`));
 //Above was having same route for 2 resources but we want to create seprete routes for different resources
 
 //we assigned root route to variable
+
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
+app.use('/', viewRouter);
 
 //if we get url other then our routes
 //this has to be at the last

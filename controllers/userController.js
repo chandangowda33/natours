@@ -1,7 +1,9 @@
+/* eslint-disable import/extensions */
 /* eslint-disable prettier/prettier */
 const User = require('../models/userModel');
 const catchAsync = require('../utilities/catchAsync');
 const AppError = require('../utilities/appError');
+const factory = require('./handlerFactory.js');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -11,17 +13,13 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
+//using this as middleware and faking the loggged in id as param id
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
 
-  res.status(200).json({
-    status: 'success',
-    results: users.length,
-    data: {
-      users,
-    },
-  });
-});
+exports.getAllUsers = factory.getAll(User);
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   console.log('here');
@@ -51,6 +49,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   });
 });
 
+//this is by user they can only make inactive
 exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
 
@@ -67,23 +66,21 @@ exports.getUser = (req, res) => {
   });
 };
 
-exports.updateUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
-};
+exports.updateUser = factory.updateOne(User);
+
+// exports.updateUser = (req, res) => {
+//   res.status(500).json({
+//     status: 'error',
+//     message: 'This route is not yet defined',
+//   });
+// };
 
 exports.createUser = (req, res) => {
   res.status(500).json({
     status: 'error',
-    message: 'This route is not yet defined',
+    message: 'Use Sign up!!',
   });
 };
 
-exports.deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
-};
+//this is by admin he can delete
+exports.deleteUser = factory.deleteOne(User);

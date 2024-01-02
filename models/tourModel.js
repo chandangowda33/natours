@@ -48,6 +48,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'Ratings must be above 1.0'], //validator
       max: [5, 'Ratings must be above 5.0'], //validator
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
@@ -58,8 +59,8 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a difficulty'],
       //if we have one or more values we have to use like this
       enum: {
-        values: ['easy', 'medium', 'difficulty'],
-        message: 'Difficulty is either: easy, medium, difficulty',
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficulty is either: easy, medium, difficult',
       }, //validator
     },
     price: {
@@ -103,7 +104,7 @@ const tourSchema = new mongoose.Schema(
         enum: ['Point'],
       },
       //this will be of array with longitude and latitude
-      coordibates: [Number],
+      coordinates: [Number],
       address: String,
       description: String,
     },
@@ -128,7 +129,7 @@ const tourSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.ObjectId,
         //here we dont need to import Uder model also for this
-        reference: 'User',
+        ref: 'User',
       },
     ],
     startDates: [Date],
@@ -149,6 +150,30 @@ tourSchema.virtual('durationWeeks').get(function () {
   //calculation how long tour is in weeks
   //using regular fn coz => fn dont get its own this keyword
   return this.duration / 7;
+});
+
+//if we want to query tours which are above 1000 then query have to go through all documents
+//by index it will create a seperate table based on price and index them so when we send query it will go through first documertns till price falls below 3
+//1 is for ascending -1 or descending
+//in compass you can see but sometimes it wont show there try several times
+// tourSchema.index({ price: 1 });
+
+//this is compound indexing
+//there is no right way for this based on our requirement we have to do this
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+//this is special indexing which helps in geospatical data
+tourSchema.index({ startLocation: '2dsphere' });
+
+// below is virtual populate of reviews
+//right now non of the tour have an idea which all reviews about them
+//we can't store id's of review in tour DB coz we know it might get big
+//so we use this virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  //in below field we should mention the object name in Schema in which you used ref:'Tour'
+  foreignField: 'tour',
+  localField: '_id',
 });
 
 //Document middleware
@@ -175,7 +200,7 @@ tourSchema.pre('save', function (next) {
 // tourSchema.pre('save', async function (next) {
 //   //inside map there is async so it return promises and it will be ful of promises
 //   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
-//   //so here we run promise.all to execute everything at once
+//   //so here we run promise.all to execute at once
 //   this.guides = await Promise.all(guidesPromises);
 // });
 
@@ -188,6 +213,17 @@ tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
 
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  console.log('populate');
+  this.populate({
+    path: 'guides',
+    //below two fields we dont want to populate about guides so we add - and mention field names here
+    select: '-__v -passwordChangedAt',
+  });
+
   next();
 });
 
